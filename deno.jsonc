@@ -1,0 +1,13 @@
+{
+  "tasks": {
+    "test": "rm -rf cov_profile && deno test --trace-leaks --no-check --coverage=cov_profile --reporter=dot && deno coverage cov_profile --exclude=test --exclude=.bak --exclude=deps"
+  },
+  "compilerOptions": {
+    "lib": ["esnext", "dom", "dom.iterable"]
+  },
+  "lint": {
+    "rules": {
+      "exclude": ["require-await"]
+    }
+  }
+}
