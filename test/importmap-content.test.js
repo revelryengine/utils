@@ -1,59 +1,62 @@
-import { describe, it, beforeEach, afterEach } from 'https://deno.land/std@0.208.0/testing/bdd.ts';
-
-import { assertStrictEquals } from 'https://deno.land/std@0.208.0/assert/assert_strict_equals.ts';
+import { describe, it, expect, beforeEach, afterEach, sinon } from 'bdd';
 
 import { importmapContent } from '../lib/importmap-content.js';
 
 describe('importmapContent', () => {
-    /** @type {typeof globalThis.document | undefined} */
-    let originalDocument;
-    /** @type {string | undefined} */
-    let originalImportmapContent;
-
-    const setDocumentImportMap = (textContent) => {
-        globalThis.document = /** @type {any} */ ({
-            querySelector(selector) {
-                if (selector === 'script[type="importmap"]') {
-                    return textContent === undefined ? null : { textContent };
-                }
-                return null;
-            }
+    describe('importmapContent', () => {
+        beforeEach(() => {
+            /** @type {any} */ (globalThis).importmapContent = { imports: { foo: 'bar' } };
         });
-    };
 
-    beforeEach(() => {
-        originalDocument = globalThis.document;
-        originalImportmapContent = /** @type {any} */ (globalThis).importmapContent;
-        delete /** @type {any} */ (globalThis).importmapContent;
-        delete (globalThis).document;
+        afterEach(() => {
+            /** @type {any} */ (globalThis).importmapContent = undefined;
+        });
+
+        it('returns global importmapContent when defined', () => {
+            expect(importmapContent()).to.deep.equal({ imports: { foo: 'bar' } });
+        });
     });
 
-    afterEach(() => {
-        if (originalDocument === undefined) {
-            delete (globalThis).document;
-        } else {
-            globalThis.document = originalDocument;
-        }
-        if (originalImportmapContent === undefined) {
-            delete /** @type {any} */ (globalThis).importmapContent;
-        } else {
-            /** @type {any} */ (globalThis).importmapContent = originalImportmapContent;
-        }
-    })
+    describe('document importmap script', () => {
+        /**
+         * @type {sinon.SinonStub}
+         */
+        let documentQuerySelectorStub;
+        beforeEach(() => {
+            const importMapContent = '{ "imports": { "foo": "bar" }, "scopes": { "/scope/": { "baz": "qux" } } }';
 
-    it('should return global importmapContent when defined', () => {
-        /** @type {any} */ (globalThis).importmapContent = '{ "imports": {}}';
-        setDocumentImportMap('{ "imports": { "unused": "value" } }');
-        assertStrictEquals(importmapContent(), '{ "imports": {}}');
+            globalThis.document ??= /** @type {any} */ ({ querySelector: () => null });
+            /** @ts-expect-error */
+            documentQuerySelectorStub = sinon.stub(globalThis.document, 'querySelector').returns({ textContent: importMapContent });
+        });
+
+        afterEach(() => {
+            documentQuerySelectorStub.restore();
+        });
+
+        it('falls back to document importmap script content and resolves urls relative to location.href', () => {
+            expect(importmapContent()).to.deep.equal({
+                imports: { foo: new URL('bar', location.href).href },
+                scopes: { [new URL('/scope/', location.href).href]: { baz: new URL('qux', location.href).href } }
+            });
+        });
     });
 
-    it('should fall back to document importmap script content', () => {
-        setDocumentImportMap('{ "imports": { "doc": "value" } }');
-        assertStrictEquals(importmapContent(), '{ "imports": { "doc": "value" } }');
-    });
+    describe('no importmap defined', () => {
+        /**
+         * @type {sinon.SinonStub}
+         */
+        let documentQuerySelectorStub;
+        beforeEach(() => {
+            globalThis.document ??= /** @type {any} */ ({ querySelector: () => null });
+            documentQuerySelectorStub = sinon.stub(globalThis.document, 'querySelector').returns(null);
+        });
 
-    it('should return empty JSON object when neither global nor document import maps exist', () => {
-        setDocumentImportMap(undefined);
-        assertStrictEquals(importmapContent(), '{}');
+        afterEach(() => {
+            documentQuerySelectorStub.restore();
+        });
+        it('returns empty imports object when neither global nor document import maps exist', () => {
+            expect(importmapContent()).to.deep.equal({ imports: {} });
+        });
     });
 });

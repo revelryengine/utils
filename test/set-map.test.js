@@ -1,9 +1,4 @@
-import { describe, it, beforeEach } from 'https://deno.land/std@0.208.0/testing/bdd.ts';
-
-import { assert           } from 'https://deno.land/std@0.208.0/assert/assert.ts';
-import { assertEquals     } from 'https://deno.land/std@0.208.0/assert/assert_equals.ts';
-import { assertFalse      } from 'https://deno.land/std@0.208.0/assert/assert_false.ts';
-import { assertInstanceOf } from 'https://deno.land/std@0.208.0/assert/assert_instance_of.ts';
+import { describe, it, expect, beforeEach } from 'bdd';
 
 import { SetMap } from '../lib/set-map.js';
 
@@ -22,35 +17,35 @@ describe('SetMap', () => {
         setMap.delete('removed', 'foobar');
     });
 
-    it('should create a new Set for key', () => {
-        assertInstanceOf(setMap.get('foo'), Set);
+    it('creates a new Set for key', () => {
+        expect(setMap.get('foo')).to.be.instanceOf(Set);
     });
 
-    it('should add item to set', () => {
-        assert(setMap.get('foo')?.has('foobat'));
-        assert(setMap.get('foo')?.has('foobaz'));
+    it('adds item to set', () => {
+        expect(setMap.get('foo')?.has('foobat')).to.equal(true);
+        expect(setMap.get('foo')?.has('foobaz')).to.equal(true);
     });
 
-    it('should remove item from set', () => {
-        assertFalse(setMap.get('foo')?.has('foobar'));
+    it('removes item from set', () => {
+        expect(setMap.get('foo')?.has('foobar')).to.equal(false);
     });
 
-    it('should remove empty Sets', () => {
-        assertEquals(setMap.get('removed'), undefined);
+    it('removes empty Sets', () => {
+        expect(setMap.get('removed')).to.equal(undefined);
     });
 
-    it('should return false if deleted but key does not exist', () => {
-        assertFalse(setMap.delete('x'));
+    it('returns false if deleted but key does not exist', () => {
+        expect(setMap.delete('x')).to.equal(false);
     });
 
     describe('count', () => {
-        it('should return the number of items in a given set', () => {
-            assertEquals(setMap.count('foo'), 2);
-            assertEquals(setMap.count('removed'), 0);
+        it('returns the number of items in a given set', () => {
+            expect(setMap.count('foo')).to.equal(2);
+            expect(setMap.count('removed')).to.equal(0);
         });
 
-        it('should return 0 for a non existent set', () => {
-            assertEquals(setMap.count('z'), 0);
+        it('returns 0 for a non existent set', () => {
+            expect(setMap.count('z')).to.equal(0);
         });
     });
 });

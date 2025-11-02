@@ -1,31 +1,27 @@
-import { describe, it } from 'https://deno.land/std@0.208.0/testing/bdd.ts';
-
-import { assertEquals       } from 'https://deno.land/std@0.208.0/assert/assert_equals.ts';
-import { assertStrictEquals } from 'https://deno.land/std@0.208.0/assert/assert_strict_equals.ts';
-import { assertThrows       } from 'https://deno.land/std@0.208.0/assert/assert_throws.ts';
+import { describe, it, expect } from 'bdd';
 
 import { NonNull } from '../lib/non-null.js';
 
 describe('NonNull', () => {
-    it('should return the provided value when it is not nullish', () => {
+    it('returns the provided value when it is not nullish', () => {
         const value = { foo: 'bar' };
-        assertStrictEquals(NonNull(value), value);
-        assertStrictEquals(NonNull(0), 0);
-        assertStrictEquals(NonNull(false), false);
+        expect(NonNull(value)).to.equal(value);
+        expect(NonNull(0)).to.equal(0);
+        expect(NonNull(false)).to.equal(false);
     });
 
-    it('should throw with the default message for nullish values', () => {
-        assertThrows(() => NonNull(null), Error, 'Unexpected null or undefined.');
-        assertThrows(() => NonNull(undefined), Error, 'Unexpected null or undefined.');
+    it('throws with the default message for nullish values', () => {
+        expect(() => NonNull(null)).to.throw('Unexpected null or undefined.');
+        expect(() => NonNull(undefined)).to.throw('Unexpected null or undefined.');
     });
 
-    it('should use the provided message when throwing', () => {
+    it('uses the provided message when throwing', () => {
         const message = 'Custom message';
-        assertThrows(() => NonNull(null, message), Error, message);
+        expect(() => NonNull(null, message)).to.throw(message);
     });
 
-    it('should not evaluate custom message when value is non-null', () => {
+    it('does not evaluate custom message when value is non-null', () => {
         const message = 'Custom message';
-        assertEquals(NonNull('value', message), 'value');
+        expect(NonNull('value', message)).to.equal('value');
     });
 });

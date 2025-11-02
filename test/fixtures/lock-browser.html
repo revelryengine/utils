@@ -1,0 +1,9 @@
+<script type="module">
+    import { requestLock } from '../../lib/lock.js';
+
+    const mode = location.hash.slice(1) === 'shared' ? 'shared' : 'exclusive';
+
+    await requestLock('test-lock', { mode }, async () => {
+        window.opener?.postMessage('lock-acquired', '*')
+    });
+</script>

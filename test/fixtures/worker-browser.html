@@ -1,0 +1,18 @@
+<script type="importmap">
+    {
+        "imports": {
+            "es-module-shims": "https://cdn.jsdelivr.net/npm/es-module-shims@2.6.2/dist/es-module-shims.wasm.js"
+        }
+    }
+</script>
+<script type="module">
+    const id = location.hash.slice(1);
+    import { WorkerHelper } from '../../lib/worker-helper.js';
+
+    (async () => {
+        const helper = new WorkerHelper(import.meta.resolve('./worker.js'), { type: 'module', shared: true });
+        await helper.init();
+        const count = await helper.callMethod({ method: 'methodIncrement' });
+        window.opener?.postMessage({ id, count }, '*');
+    })();
+</script>
